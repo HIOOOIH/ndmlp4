@@ -6,60 +6,58 @@ import matplotlib.pyplot as plt
 
 # 导入数据并设置为df
 csv = pd.read_csv('Titanic.csv')
-data_train = pd.DataFrame(csv)
+titanic_df = pd.DataFrame(csv)
+titanic_df.info()
 
-# 删除缺失数据
-pd.DataFrame.dropna(data_train)
-
-data_train
-
-# 数据：乘客id，存活是1，舱位1等2等3等，名字，性别，年龄，兄弟姐妹或配偶，父母或孩子，票号，票价，船舱号，上船地
-# PassengerId	Survived	Pclass	Name	Sex	Age	SibSp	Parch	Ticket	Fare	Cabin	Embarked
-
-# 对存活率来说，乘客id、名字、票号相关性不大，同时船舱号缺失的太多了，所以也不分析
-# 分析舱位等级、性别、年龄、上船地、家庭成员，票价跟舱位等级相关联，所以只分析了舱位等级。
+# 1. 提出问题
+# 详见ipynb
 
 
-'''
-从舱位等级可以看出一等舱存活率最高，其次是二等舱，最次是三等舱。
-'''
+# 2. 数据清理
+changed_df = titanic_df.copy()
+changed_df['Embarked'] = changed_df['Embarked'].dropna()
 
-'''
-取出某几列 https://jingyan.baidu.com/article/f96699bbf6fc95894e3c1bab.html
-
-groupby的用法 http://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.groupby.html
-'''
-pclass_survived = data_train[['Pclass', 'Survived']].groupby(['Pclass']).mean()
+# http://pandas.pydata.org/pandas-docs/stable/missing_data.html
+changed_df = titanic_df.fillna(titanic_df.mean()['Age'])
 
 
-'''
-从性别来看，女性比男性活下来的更多。
-'''
-sex_survived = data_train[['Sex', 'Survived']].groupby(['Sex']).mean()
+# 3. 探索分析
+def factor_explore(factor):
+    factor_survived = changed_df[[factor, 'Survived']].groupby([factor]).mean()
+    factor_survived.plot(kind='bar')
+    plt.title(factor + ' VS Survial Rate')
+    plt.ylabel(factor + ' Rate')
+    
+# 舱位等级
+factor_explore('Pclass')
 
-'''
-年龄这个不知道怎么解决
-'''
-age_survived = data_train[['Age', 'Survived']].groupby(['Age']).mean()
+# 性别
+factor_explore('Sex')
 
+# TODO 港口 
+factor_explore('Embarked')
 
-'''
-从上船地来看,从C口上船的人活下来的最多，其次是Q，再次是S。
-'''
+# 家庭成员
+changed_df['FamilyMember'] = changed_df['SibSp'] + changed_df['Parch'] + 1
 
-embarked_survived = data_train[['Embarked', 'Survived']].groupby(['Embarked']).mean()
+factor_explore('FamilyMember')
 
-
-'''
-从家庭成员来看，这个结果是说4个人的家庭存活率最高？
-'''
-# 算上本身
-data_train['FamilyMember'] = data_train['SibSp'] + data_train['Parch'] + 1
-
-family_survived = data_train[['FamilyMember', 'Survived']].groupby(['FamilyMember']).mean()
-
-
-
+# 年龄
+changed_df['Age'].hist()
+plt.title('Age Distribution')
+plt.ylabel('Frequency')
+plt.xlabel('Age')
 
 
+# 补充
+# 性别的比例
+sex_count = changed_df[['Sex','Survived']].groupby(['Sex']).size()
+sex_count
 
+# 幸存者与死亡者的比例
+Survived_count =  changed_df.groupby('Survived')['Survived'].count()
+print (Survived_count)
+plt.pie(Survived_count, labels=['Non-survived','Survived'], autopct='%.1f%%')
+
+# 4. 结论总结
+# 详见ipynb
