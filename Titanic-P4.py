@@ -15,10 +15,11 @@ titanic_df.info()
 
 # 2. 数据清理
 changed_df = titanic_df.copy()
-changed_df['Embarked'] = changed_df['Embarked'].dropna()
 
-# http://pandas.pydata.org/pandas-docs/stable/missing_data.html
-changed_df = titanic_df.fillna(titanic_df.mean()['Age'])
+changed_df['Age'].fillna(changed_df['Age'].mean(),inplace=True)
+
+changed_df.dropna(subset=["Embarked"], inplace=True)
+changed_df = changed_df.dropna(subset=["Embarked"])
 
 
 # 3. 探索分析
